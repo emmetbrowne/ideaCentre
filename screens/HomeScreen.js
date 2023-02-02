@@ -15,6 +15,14 @@ const HomeScreen = () => {
       .catch(error => alert(error.message))
   }
 
+  const handleRecord = () => {
+    auth
+    (() => {
+      navigation.replace("Record")
+    })
+    .catch(error => alert(error.message))
+  }
+
   return (
     <View style={styles.container}>
       <Text>Email: {auth.currentUser?.email}</Text>
@@ -23,6 +31,12 @@ const HomeScreen = () => {
         style={styles.button}
       >
         <Text style={styles.buttonText}>Sign out</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={handleRecord}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>Record Audio</Text>
       </TouchableOpacity>
     </View>
   )
