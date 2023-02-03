@@ -32,7 +32,9 @@ export default function LoginScreen({ navigation }) {
         const user = userCredentials.user;
         console.log("Registered with:", user.email);
       })
-      .catch((error) => alert(error.message));
+      .catch((error) =>
+        alert("Email / Password format is incorrect, please try again")
+      );
   };
 
   const handleLogin = () => {
