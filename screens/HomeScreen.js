@@ -3,10 +3,8 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { auth } from "../firebase";
 
 export default function HomeScreen({ navigation }) {
-  const handleRecord = () => {
-    auth(() => {
-      navigation.navigate("Home");
-    }).catch((error) => alert(error.message));
+  const handleRecordPage = () => {
+    navigation.navigate("Record");
   };
 
   const handleSignOut = () => {
@@ -24,7 +22,7 @@ export default function HomeScreen({ navigation }) {
       <TouchableOpacity onPress={handleSignOut} style={styles.button}>
         <Text style={styles.buttonText}>Sign out</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={handleRecord} style={styles.button}>
+      <TouchableOpacity onPress={handleRecordPage} style={styles.button}>
         <Text style={styles.buttonText}>Record Audio</Text>
       </TouchableOpacity>
     </View>

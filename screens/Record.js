@@ -77,7 +77,7 @@ import { auth } from "../firebase";
 //   });
 // }
 
-export default function Record() {
+export default function Record({ navigation }) {
   const handleSignOut = () => {
     auth
       .signOut()
@@ -89,7 +89,7 @@ export default function Record() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={handleSignOut} style={styles.button}>
+      {/* <TouchableOpacity onPress={handleSignOut} style={styles.button}>
         <Text style={styles.buttonText}>Sign out</Text>
       </TouchableOpacity>
       <Button
@@ -97,7 +97,7 @@ export default function Record() {
         onPress={recording ? stopRecording : startRecording}
       />
       {getRecordingLines()}
-      <StatusBar style="auto" />
+      <StatusBar style="auto" /> */}
     </View>
   );
 }
