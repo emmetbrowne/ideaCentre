@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/core";
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -14,6 +14,16 @@ import { auth } from "../firebase";
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        navigation.navigate("Home");
+      }
+    });
+
+    return unsubscribe;
+  }, []);
 
   const handleSignUp = () => {
     auth
@@ -32,8 +42,7 @@ export default function LoginScreen({ navigation }) {
         const user = userCredentials.user;
         console.log("Logged in with:", user.email);
       })
-      .then(navigation.navigate("Home"))
-      .catch((error) => alert(error.message));
+      .catch((error) => alert("User not found, Please try again"));
   };
 
   return (

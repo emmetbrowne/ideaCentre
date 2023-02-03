@@ -42,6 +42,7 @@ export default function Record({ navigation }) {
   async function stopRecording() {
     setRecording(undefined);
     await recording.stopAndUnloadAsync();
+    Audio.setAudioModeAsync({ allowsRecordingIOS: false });
 
     let updatedRecordings = [...recordings];
     const { sound, status } = await recording.createNewLoadedSoundAsync();
