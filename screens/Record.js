@@ -9,15 +9,6 @@ import { auth } from "../firebase";
 // const [recordings, setRecordings] = React.useState([]);
 // const [message, setMessage] = React.useState("");
 
-// const handleSignOut = () => {
-//   auth
-//     .signOut()
-//     .then(() => {
-//       navigation.replace("Login");
-//     })
-//     .catch((error) => alert(error.message));
-// };
-
 // async function startRecording() {
 //   try {
 //     const permission = await Audio.requestPermissionsAsync();
@@ -87,6 +78,15 @@ import { auth } from "../firebase";
 // }
 
 export default function Record() {
+  const handleSignOut = () => {
+    auth
+      .signOut()
+      .then(() => {
+        navigation.navigate("Login");
+      })
+      .catch((error) => alert(error.message));
+  };
+
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={handleSignOut} style={styles.button}>
