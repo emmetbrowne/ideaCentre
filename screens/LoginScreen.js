@@ -9,14 +9,18 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { auth } from "../firebase";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { firebaseConfig } from "../firebase";
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = auth.onAuthStateChanged((auth, user) => {
       if (user) {
         navigation.navigate("Home");
       }
