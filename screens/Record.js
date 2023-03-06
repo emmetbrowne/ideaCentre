@@ -1,89 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
-    Button,
-    StatusBar,
+    StyleSheet, Text, TouchableOpacity, View, Button, StatusBar,
 } from "react-native";
-import { auth } from "../firebase";
+import firebase from "firebase";
+import auth from "../firebase/auth";
+import 'firebase/storage'
 import { Audio } from "expo-av";
-import * as Sharing from "expo-sharing";
 
 export default function Record({ navigation }) {
-    const [recording, setRecording] = React.useState();
-    const [recordings, setRecordings] = React.useState([]);
-    const [message, setMessage] = React.useState("");
+    const [recording, setRecording] = useState(null);
+    const [sound, setSound] = useState(null);
+    const [recordingStatus, setRecordingStatus] = useState(null);
 
-    async function startRecording() {
-        try {
-            const permission = await Audio.requestPermissionsAsync();
+    // create a reference to the Firebase Storage bucket
+    const storageRef = firebase.storage().ref();
+    console.log('Succesfully created reference to firebase storage bucket');
 
-            if (permission.status === "granted") {
-                await Audio.setAudioModeAsync({
-                    allowsRecordingIOS: true,
-                    playsInSilentModeIOS: true,
-                });
-
-                const { recording } = await Audio.Recording.createAsync(
-                    Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY
-                );
-
-                setRecording(recording);
-            } else {
-                setMessage("Please grant permission to app to access microphone");
+    useEffect(() => {
+        // request permission to use the microphone
+        (async () => {
+            const { status } = await Audio.requestPermissionsAsync();
+            console.log('Permission granted for microphone use');
+            if (status !== 'granted') {
+                alert('Sorry, we need microphone permissions to make this work!');
+                console.log('Permission  NOT granted for microphone use');
+                return;
             }
-        } catch (err) {
-            console.error("Failed to start recording", err);
-        }
-    }
-
-    async function stopRecording() {
-        setRecording(undefined);
-        await recording.stopAndUnloadAsync();
-        Audio.setAudioModeAsync({ allowsRecordingIOS: false });
-
-        let updatedRecordings = [...recordings];
-        const { sound, status } = await recording.createNewLoadedSoundAsync();
-        updatedRecordings.push({
-            sound: sound,
-            duration: getDurationFormatted(status.durationMillis),
-            file: recording.getURI(),
-        });
-
-        setRecordings(updatedRecordings);
-    }
-
-    function getDurationFormatted(millis) {
-        const minutes = millis / 1000 / 60;
-        const minutesDisplay = Math.floor(minutes);
-        const seconds = Math.round((minutes - minutesDisplay) * 60);
-        const secondsDisplay = seconds < 10 ? `0${seconds}` : seconds;
-        return `${minutesDisplay}:${secondsDisplay}`;
-    }
-
-    function getRecordingLines() {
-        return recordings.map((recordingLine, index) => {
-            return (
-                <View key={index} style={styles.row}>
-                    <Text style={styles.fill}>
-                        Recording {index + 1} - {recordingLine.duration}
-                    </Text>
-                    <Button
-                        style={styles.button}
-                        onPress={() => recordingLine.sound.replayAsync()}
-                        title="Play"
-                    ></Button>
-                    <Button
-                        style={styles.button}
-                        onPress={() => Sharing.shareAsync(recordingLine.file)}
-                        title="Share"
-                    ></Button>
-                </View>
-            );
-        });
-    }
+        })();
+    }, []);
 
     const handleSignOut = () => {
         auth
@@ -94,17 +38,78 @@ export default function Record({ navigation }) {
             .catch((error) => alert(error.message));
     };
 
+    const startRecording = async () => {
+        // create a new recording instance
+        const recording = new Audio.Recording();
+        console.log('Created new recording instance');
+        await Audio.setAudioModeAsync({
+            allowsRecordingIOS: true,
+            playsInSilentModeIOS: true,
+        })
+            .catch(error => console.error('Failed to set audio mode', error));
+
+        try {
+            // prepare the recording
+            await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+            console.log('Recording preperation succesfull');
+            // start recording
+            await recording.startAsync();
+            console.log('Started recording');
+        } catch (err) {
+            console.error('Failed to start recording', err);
+        }
+
+        setRecording(recording);
+        setRecordingStatus('recording');
+    };
+
+    const stopRecording = async () => {
+        setRecordingStatus('stopped');
+        console.log('Stopped recording');
+        try {
+            // stop recording
+            await recording.stopAndUnloadAsync();
+        } catch (err) {
+            console.error('Failed to stop recording', err);
+        }
+
+        // get the URI of the recorded audio file
+        const uri = recording.getURI();
+        console.log('Succesfully got the recorded audio file');
+
+        try {
+            // upload the recorded audio file to Firebase Storage
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            const fileName = `audio_${Date.now()}.m4a`; // generate a unique filename
+            const audioRef = storageRef.child(`audio/${fileName}`);
+            const snapshot = await audioRef.put(blob);
+
+            // create a reference to the uploaded audio file in Firebase Realtime Database
+            const db = firebase.database();
+            const audioId = audioRef.key;
+            const audioUrl = await audioRef.getDownloadURL().catch(error => console.error('Failed to get audio URL', error));
+            await db.ref(`audio/${audioId}`).set({
+                url: audioUrl,
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            setSound({ uri: recording.getURI() });
+            setRecording(null);
+        } catch (err) {
+            console.error("Failed to upload audio to firebase storage", err);
+        }
+    };
+
     return (
         <View style={styles.container}>
-            <TouchableOpacity onPress={handleSignOut} style={styles.button}>
+            <Text style={styles.title}>Record Audio</Text>
+            <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
                 <Text style={styles.buttonText}>Sign out</Text>
             </TouchableOpacity>
-            <Button
-                title={recording ? "Stop Recording" : "Start Recording"}
-                onPress={recording ? stopRecording : startRecording}
-            />
-            {getRecordingLines()}
-            <StatusBar style="auto" />
+            <Button title="Start Recording" onPress={startRecording} disabled={recordingStatus === 'recording'} />
+            <Button title="Stop Recording" onPress={stopRecording} disabled={!recording} />
+            {sound && <Text style={styles.status}>Recorded audio URI: {sound.uri}</Text>}
         </View>
     );
 }
@@ -112,25 +117,26 @@ export default function Record({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    button: {
+    title: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    status: {
+        marginTop: 20,
+    },
+    signOutButton: {
         backgroundColor: "#0782F9",
         width: "60%",
         padding: 15,
         borderRadius: 10,
         alignItems: "center",
         marginTop: 40,
-    },
-    row: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    fill: {
-        flex: 1,
-        margin: 16,
+        position: 'absolute',
+        bottom: 100
     },
     buttonText: {
         color: "white",

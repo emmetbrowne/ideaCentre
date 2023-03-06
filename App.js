@@ -1,6 +1,7 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import Navigator from "../ideaCentre/routes/homeStack";
+import Navigator from "./routes/homeStack"
+import firebaseConfig from "./firebase/firebaseConfig";
 
 export default function App() {
   return <Navigator />;

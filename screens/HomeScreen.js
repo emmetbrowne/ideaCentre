@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { auth } from "../firebase";
+import auth from "../firebase/auth";
 
 export default function HomeScreen({ navigation }) {
   const handleRecordPage = () => {
