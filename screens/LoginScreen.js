@@ -11,6 +11,9 @@ import {
 } from "react-native";
 import auth from "../firebase/auth";
 
+
+// add loading if loading (loading screen)
+
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
