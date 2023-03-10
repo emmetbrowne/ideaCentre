@@ -3,6 +3,8 @@ import { createAppContainer } from "react-navigation";
 import Home from "../screens/HomeScreen";
 import Login from "../screens/LoginScreen";
 import Record from "../screens/Record";
+import Centre from "../screens/Centre";
+
 
 const screens = {
   Login: {
@@ -14,6 +16,9 @@ const screens = {
   Record: {
     screen: Record,
   },
+  Centre: {
+    screen: Centre,
+  }
 };
 
 const HomeStack = createStackNavigator(screens);

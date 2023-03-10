@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
     StyleSheet, FlatList, Text, TouchableOpacity, View, Button, StatusBar,
 } from "react-native";
@@ -7,27 +7,15 @@ import auth from "../firebase/auth";
 import 'firebase/storage'
 import { Audio } from "expo-av";
 
-
-
-/* TODO: 
-
-    Write code to allow for download and display of audio recorded, in a different sections
-    possibly using tab navigation
-
-*/
-
-
-/* TODO:
-    
-    Create 'if loading' loading
-
-*/
-
 export default function Record({ navigation }) {
     const [recording, setRecording] = useState(null);
     const [sound, setSound] = useState(null);
     const [recordingStatus, setRecordingStatus] = useState(null);
-    const [db, setDb] = useState(null);
+    const fileNumberRef = useRef(1);
+
+    const handlCentrePage = () => {
+        navigation.navigate("Centre");
+    };
 
     const handleSignOut = () => {
         auth
@@ -40,6 +28,7 @@ export default function Record({ navigation }) {
 
     useEffect(() => {
         // request permission to use the microphone
+        // fetchAudioFiles();
         (async () => {
             const { status } = await Audio.requestPermissionsAsync();
             console.log('Permission granted for microphone use');
@@ -50,6 +39,30 @@ export default function Record({ navigation }) {
             }
         })();
     }, []);
+
+    // Function to fetch audio files uploaded by current user
+    // const fetchAudioFiles = async () => {
+
+    //     const currentUser = firebase.auth().currentUser;
+    //     console.log("Current User: ", currentUser);
+    //     if (!currentUser) {
+    //         console.error("No user is currently logged in")
+    //         return;
+    //     }
+
+    //     const storageRef = firebase.storage().ref();
+    //     const audioRef = storageRef.child('audio/${currentUser.uid}');
+
+    //     try {
+    //         const listResult = await audioRef.listAll();
+    //         const items = listResult.items;
+    //         const urls = await Promise.all(items.map(item => item.getDownloadURL()));
+    //         console.log('Fethced audio files:', urls);
+
+    //     } catch (error) {
+    //         console.error('Failed to fetch audio files', error);
+    //     }
+    // };
 
     const startRecording = async () => {
         // create a new recording instance
@@ -93,9 +106,14 @@ export default function Record({ navigation }) {
         try {
             // upload the recorded audio file to Firebase Storage
             const response = await fetch(uri);
+            // Get the logged in users email
+            const userID = firebase.auth().currentUser.uid;
             const blob = await response.blob();
-            const fileName = `audio_${Date.now()}.mp3`; // generate a unique filename
-            const storageRef = firebase.storage().ref().child(`audio/${fileName}`);
+            // generate a unique filename
+            const fileName = `audio_${userID}_${fileNumberRef.current}.m4a`;
+            const storageRef = firebase.storage().ref().child(`audio/${userID}/${fileName}`);
+            // Increment a file number for each saved file
+            fileNumberRef.current++;
             const snapshot = await storageRef.put(blob);
             const audioUrl = await storageRef.getDownloadURL();
             setSound({ uri: recording.getURI() });
@@ -114,6 +132,9 @@ export default function Record({ navigation }) {
             </TouchableOpacity>
             <Button title="Start Recording" onPress={startRecording} disabled={recordingStatus === 'recording'} />
             <Button title="Stop Recording" onPress={stopRecording} disabled={!recording} />
+            <TouchableOpacity onPress={handlCentrePage} style={styles.centreButton}>
+                <Text style={styles.buttonText}> View Centre</Text>
+            </TouchableOpacity>
         </View>
     );
 }
@@ -140,7 +161,17 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginTop: 40,
         position: 'absolute',
-        bottom: 100
+        bottom: 100,
+    },
+    centreButton: {
+        backgroundColor: "#0782F9",
+        width: "60%",
+        padding: 15,
+        borderRadius: 10,
+        alignItems: "center",
+        marginTop: 40,
+        position: 'absolute',
+        bottom: 25,
     },
     buttonText: {
         color: "white",
