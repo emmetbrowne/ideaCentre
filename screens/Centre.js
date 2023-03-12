@@ -6,10 +6,12 @@ import { Table, Row } from 'react-native-table-component';
 import firebase from "firebase";
 import auth from "../firebase/auth";
 import 'firebase/storage'
+import { Audio } from 'expo-av';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-export default function AudioTable({ navigation }) {
+
+export default function Centre({ navigation }) {
     const [audioList, setAudioList] = useState([]);
-    const [tableData, setTableData] = useState([]);
 
     const handleSignOut = () => {
         auth
@@ -21,80 +23,113 @@ export default function AudioTable({ navigation }) {
     };
 
     useEffect(() => {
-        // Fetch audio files for the logged-in user
-        const userId = firebase.auth().currentUser.userID;
-        console.log("Current User: ", userId);
-        const storageRef = firebase.storage().ref().child(`audio/${userId}/audio`);
-        storageRef.listAll().then(res => {
-            const promises = res.items.map(item => item.getDownloadURL());
-            Promise.all(promises).then(urls => {
-                setAudioList(urls);
-                console.log("Audio List: ", audioList);
+        // Get audio files from Firebase Storage
+        const userID = firebase.auth().currentUser.uid;
+        console.log("Current User: ", userID);
+        firebase.storage().ref(`audio/${userID}/`).listAll().then((result) => {
+            result.items.forEach((audioRef) => {
+                // Get download URL for each audio file
+                audioRef.getDownloadURL().then((url) => {
+                    // Add audio file to the list
+                    setAudioList((prevState) => [...prevState, { name: audioRef.name, url }]);
+                });
             });
-        }).catch(error => {
-            console.log(error);
         });
     }, []);
 
-    useEffect(() => {
-        // Generate table data
-        const data = audioList.map((audioUrl, index) => {
-            return [index + 1, audioUrl];
-        });
-        setTableData(data);
-    }, [audioList]);
+    const playAudio = async (url) => {
+        try {
+            const soundObject = new Audio.Sound();
+            await soundObject.loadAsync({ uri: url });
+            await soundObject.playAsync();
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
-    const tableHeader = ['No.', 'Audio URL'];
+
+    // const renderItem = ({ item }) => {
+    //     return (
+    //         <TouchableOpacity
+    //             style={styles.audioItem}
+    //             onPress={() => {
+    //                 playAudio(item.url);
+    //             }}
+    //         >
+    //             <MaterialCommunityIcons name="music" size={24} color="black" style={styles.audioIcon} />
+    //             <Text style={styles.audioName}>{item.name}</Text>
+    //         </TouchableOpacity>
+    //     );
+    // };
+
+
+
+    const renderItem = ({ item }) => {
+        return (
+            <View>
+                <View style={styles.itemContainer}>
+                    <View style={styles.itemInfo}>
+                        <MaterialCommunityIcons name="file-music" size={24} color="black" />
+                        <Text style={styles.itemName}>{item.name}</Text>
+                    </View>
+                    <View style={styles.itemButtons}>
+                        <TouchableOpacity onPress={() => handleDelete(item.name)} style={styles.itemButton}>
+                            <MaterialCommunityIcons name="delete" size={24} color="black" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => playAudio(item.url)} style={styles.itemButton}>
+                            <MaterialCommunityIcons name="play-circle" size={24} color="black" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+                <View style={styles.separator} />
+            </View>
+        );
+    };
 
     return (
         <View style={styles.container}>
-            <Table borderStyle={{ borderWidth: 1 }}>
-                <Row data={tableHeader} style={styles.header} textStyle={styles.headerText} />
-                {
-                    tableData.map((rowData, index) => (
-                        <Row
-                            key={index}
-                            data={rowData}
-                            style={[styles.row, index % 2 && { backgroundColor: '#F7F6E7' }]}
-                            textStyle={styles.rowText}
-                        />
-                    ))
-                }
-            </Table>
-            <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+            <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
+            <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
                 <Text style={styles.buttonText}>Sign out</Text>
             </TouchableOpacity>
         </View>
     );
-}
+};
+
+
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        paddingTop: 30,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    rowText: {
-        textAlign: 'center'
+    itemContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
     },
-    row: {
-        height: 30
+    itemInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
-    headerText: {
-        textAlign: 'center',
-        fontWeight: 'bold'
+    itemName: {
+        marginLeft: 10,
+        fontSize: 16,
     },
-    header: {
-        height: 40,
-        backgroundColor: '#f1f8ff'
+    itemButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
-    title: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 20,
+    itemButton: {
+        marginLeft: 20,
     },
-    status: {
-        marginTop: 20,
+    separator: {
+        borderBottomWidth: 1,
+        borderBottomColor: 'grey',
+        width: '100%',
+        marginTop: 10,
     },
     signOutButton: {
         backgroundColor: "#0782F9",
@@ -105,16 +140,6 @@ const styles = StyleSheet.create({
         marginTop: 40,
         position: 'absolute',
         bottom: 100,
-    },
-    centreButton: {
-        backgroundColor: "#0782F9",
-        width: "60%",
-        padding: 15,
-        borderRadius: 10,
-        alignItems: "center",
-        marginTop: 40,
-        position: 'absolute',
-        bottom: 25,
     },
     buttonText: {
         color: "white",

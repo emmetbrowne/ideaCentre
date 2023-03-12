@@ -6,6 +6,9 @@ import firebase from "firebase";
 import auth from "../firebase/auth";
 import 'firebase/storage'
 import { Audio } from "expo-av";
+import * as FileSystem from 'expo-file-system';
+
+
 
 export default function Record({ navigation }) {
     const [recording, setRecording] = useState(null);
@@ -40,30 +43,6 @@ export default function Record({ navigation }) {
         })();
     }, []);
 
-    // Function to fetch audio files uploaded by current user
-    // const fetchAudioFiles = async () => {
-
-    //     const currentUser = firebase.auth().currentUser;
-    //     console.log("Current User: ", currentUser);
-    //     if (!currentUser) {
-    //         console.error("No user is currently logged in")
-    //         return;
-    //     }
-
-    //     const storageRef = firebase.storage().ref();
-    //     const audioRef = storageRef.child('audio/${currentUser.uid}');
-
-    //     try {
-    //         const listResult = await audioRef.listAll();
-    //         const items = listResult.items;
-    //         const urls = await Promise.all(items.map(item => item.getDownloadURL()));
-    //         console.log('Fethced audio files:', urls);
-
-    //     } catch (error) {
-    //         console.error('Failed to fetch audio files', error);
-    //     }
-    // };
-
     const startRecording = async () => {
         // create a new recording instance
         const recording = new Audio.Recording();
@@ -89,37 +68,36 @@ export default function Record({ navigation }) {
         setRecordingStatus('recording');
     };
 
+
     const stopRecording = async () => {
         setRecordingStatus('stopped');
         console.log('Stopped recording');
         try {
             // stop recording
             await recording.stopAndUnloadAsync();
-        } catch (err) {
-            console.error('Failed to stop recording', err);
-        }
+            const uri = recording.getURI();
 
-        // get the URI of the recorded audio file
-        const uri = recording.getURI();
-        console.log('Succesfully got the recorded audio file');
-
-        try {
-            // upload the recorded audio file to Firebase Storage
-            const response = await fetch(uri);
             // Get the logged in users email
             const userID = firebase.auth().currentUser.uid;
-            const blob = await response.blob();
+
+
             // generate a unique filename
-            const fileName = `audio_${userID}_${fileNumberRef.current}.m4a`;
+            const fileName = `recording_${fileNumberRef.current}.m4a`;
             const storageRef = firebase.storage().ref().child(`audio/${userID}/${fileName}`);
+
             // Increment a file number for each saved file
             fileNumberRef.current++;
+
+
+            const response = await fetch(uri);
+            const blob = await response.blob();
             const snapshot = await storageRef.put(blob);
             const audioUrl = await storageRef.getDownloadURL();
-            setSound({ uri: recording.getURI() });
+            setSound({ uri });
             setRecording(null);
+
         } catch (err) {
-            console.error("Failed to upload audio to firebase storage", err);
+            console.error('Failed to stop recording', err);
         }
     };
 
