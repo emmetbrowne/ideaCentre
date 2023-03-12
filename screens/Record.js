@@ -7,26 +7,22 @@ import auth from "../firebase/auth";
 import 'firebase/storage'
 import { Audio } from "expo-av";
 import * as FileSystem from 'expo-file-system';
+import { useNavigation } from '@react-navigation/native';
 
 
-
-export default function Record({ navigation }) {
+export default function Record() {
+    const navigation = useNavigation();
     const [recording, setRecording] = useState(null);
     const [sound, setSound] = useState(null);
     const [recordingStatus, setRecordingStatus] = useState(null);
     const fileNumberRef = useRef(1);
 
-    const handlCentrePage = () => {
-        navigation.navigate("Centre");
-    };
-
-    const handleSignOut = () => {
-        auth
-            .signOut()
-            .then(() => {
-                navigation.navigate("Login");
-            })
-            .catch((error) => alert(error.message));
+    const handleSignOut = async () => {
+        await auth.signOut();
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
     };
 
     useEffect(() => {
@@ -110,9 +106,6 @@ export default function Record({ navigation }) {
             </TouchableOpacity>
             <Button title="Start Recording" onPress={startRecording} disabled={recordingStatus === 'recording'} />
             <Button title="Stop Recording" onPress={stopRecording} disabled={!recording} />
-            <TouchableOpacity onPress={handlCentrePage} style={styles.centreButton}>
-                <Text style={styles.buttonText}> View Centre</Text>
-            </TouchableOpacity>
         </View>
     );
 }

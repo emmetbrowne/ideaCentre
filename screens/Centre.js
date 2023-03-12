@@ -8,18 +8,30 @@ import auth from "../firebase/auth";
 import 'firebase/storage'
 import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
 
 
-export default function Centre({ navigation }) {
+export default function Centre() {
+    const navigation = useNavigation();
     const [audioList, setAudioList] = useState([]);
 
-    const handleSignOut = () => {
-        auth
-            .signOut()
-            .then(() => {
-                navigation.navigate("Login");
-            })
-            .catch((error) => alert(error.message));
+    const handleSignOut = async () => {
+        await auth.signOut();
+        navigation.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+        });
+    };
+
+    const handleDelete = () => {
+        const userID = firebase.auth().currentUser.uid;
+        const audioRef = firebase.storage().ref('audio/${userID}/${fileName}');
+
+        audioRef.delete().then(() => {
+            setAudioList((prevState) => prevState.filter((audio) => audio.name !== fileName));
+        }).catch((error) => {
+            console.error(error);
+        });
     };
 
     useEffect(() => {
@@ -46,23 +58,6 @@ export default function Centre({ navigation }) {
             console.error(error);
         }
     };
-
-
-    // const renderItem = ({ item }) => {
-    //     return (
-    //         <TouchableOpacity
-    //             style={styles.audioItem}
-    //             onPress={() => {
-    //                 playAudio(item.url);
-    //             }}
-    //         >
-    //             <MaterialCommunityIcons name="music" size={24} color="black" style={styles.audioIcon} />
-    //             <Text style={styles.audioName}>{item.name}</Text>
-    //         </TouchableOpacity>
-    //     );
-    // };
-
-
 
     const renderItem = ({ item }) => {
         return (
@@ -105,6 +100,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     itemContainer: {
+        width: '85%',
+        paddingHorizontal: 5,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
