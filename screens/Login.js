@@ -12,21 +12,23 @@ import {
 import auth from "../firebase/auth";
 
 
+
 // add loading if loading (loading screen)
 
-export default function LoginScreen() {
+export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const navigate = useNavigation();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        navigation.navigate("Home");
+        navigate.navigate("Record");
       }
     });
 
     return unsubscribe;
-  }, []);
+  }, [navigate]);
 
   const handleSignUp = () => {
     auth

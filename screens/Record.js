@@ -9,7 +9,6 @@ import { Audio } from "expo-av";
 import * as FileSystem from 'expo-file-system';
 import { useNavigation } from '@react-navigation/native';
 
-
 export default function Record() {
     const navigation = useNavigation();
     const [recording, setRecording] = useState(null);

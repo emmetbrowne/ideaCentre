@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
-import LoginScreen from "./screens/LoginScreen";
+import Login from "./screens/Login";
 import Record from "./screens/Record";
 import Centre from "./screens/Centre";
 import firebase from "firebase";
@@ -25,7 +25,8 @@ export default function App() {
   function AuthStack() {
     return (
       <Stack.Navigator>
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Login" component={Login} />
+        <Stack.Screen name="Record" component={Record} />
       </Stack.Navigator>
     );
   }
