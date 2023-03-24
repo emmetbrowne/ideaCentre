@@ -26,7 +26,6 @@ export default function Record() {
 
     useEffect(() => {
         // request permission to use the microphone
-        // fetchAudioFiles();
         (async () => {
             const { status } = await Audio.requestPermissionsAsync();
             console.log('Permission granted for microphone use');
@@ -63,7 +62,6 @@ export default function Record() {
         setRecordingStatus('recording');
     };
 
-
     const stopRecording = async () => {
         setRecordingStatus('stopped');
         console.log('Stopped recording');
@@ -75,27 +73,45 @@ export default function Record() {
             // Get the logged in users email
             const userID = firebase.auth().currentUser.uid;
 
-
             // generate a unique filename
-            const fileName = `recording_${fileNumberRef.current}.m4a`;
+            const fileName = `recording_${fileNumberRef.current}.mp3`;
             const storageRef = firebase.storage().ref().child(`audio/${userID}/${fileName}`);
 
             // Increment a file number for each saved file
             fileNumberRef.current++;
 
+            // Convert the audio file to mp3
+            const fileInfo = await FileSystem.getInfoAsync(uri);
+            const audioFile = {
+                uri: uri,
+                type: fileInfo.mimeType,
+                name: fileName,
+            };
+            const mp3File = await Audio.Sound.createAsync(audioFile, {
+                encoding: Audio.Sound.ENCODING_MP3,
+                bitrate: 256000,
+                channels: 2,
+                sampleRate: 44100,
+            });
+            const mp3Uri = mp3File.uri;
 
-            const response = await fetch(uri);
-            const blob = await response.blob();
-            const snapshot = await storageRef.put(blob);
-            const audioUrl = await storageRef.getDownloadURL();
+            let response, blob, snapshot, audioUrl;
+            try {
+                response = await fetch(mp3Uri);
+                blob = await response.blob();
+                snapshot = await storageRef.put(blob);
+                audioUrl = await storageRef.getDownloadURL();
+            } catch (err) {
+                console.error('Failed to upload recording', err);
+                throw err;
+            }
+
             setSound({ uri });
             setRecording(null);
-
         } catch (err) {
             console.error('Failed to stop recording', err);
         }
     };
-
 
     return (
         <View style={styles.container}>
