@@ -90,6 +90,7 @@ export default function Record() {
             const audioUrl = await storageRef.getDownloadURL();
             setSound({ uri });
             setRecording(null);
+            console.log('Recording succesfully uploaded');
 
         } catch (err) {
             console.error('Failed to stop recording', err);
