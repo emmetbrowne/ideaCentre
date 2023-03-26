@@ -38,6 +38,30 @@ export default function Record() {
     }, []);
 
     const startRecording = async () => {
+        // Set the recording options
+        const recordingOptions = {
+            android: {
+                extension: ".mp3",
+                outputFormat: Audio.RECORDING_OPTION_ANDROID_OUTPUT_FORMAT_DEFAULT,
+                audioEncoder: Audio.RECORDING_OPTION_ANDROID_AUDIO_ENCODER_DEFAULT,
+                sampleRate: 44100,
+                numberOfChannels: 2,
+                bitRate: 128000,
+                linearPCMBitDepth: 16,
+                linearPCMIsBigEndian: false,
+                linearPCMIsFloat: false
+            },
+            ios: {
+                extension: ".wav",
+                audioQuality: Audio.RECORDING_OPTION_IOS_AUDIO_QUALITY_HIGH,
+                sampleRate: 44100,
+                numberOfChannels: 1,
+                bitRate: 128000,
+                linearPCMBitDepth: 16,
+                linearPCMIsBigEndian: false,
+                linearPCMIsFloat: false
+            }
+        };
         // create a new recording instance
         const recording = new Audio.Recording();
         console.log('Created new recording instance');
@@ -49,7 +73,7 @@ export default function Record() {
 
         try {
             // prepare the recording
-            await recording.prepareToRecordAsync(Audio.RECORDING_OPTIONS_PRESET_HIGH_QUALITY);
+            await recording.prepareToRecordAsync(recordingOptions);
             console.log('Recording preperation succesfull');
             // start recording
             await recording.startAsync();
@@ -65,6 +89,7 @@ export default function Record() {
     const stopRecording = async () => {
         setRecordingStatus('stopped');
         console.log('Stopped recording');
+
         try {
             // stop recording
             await recording.stopAndUnloadAsync();
@@ -74,40 +99,19 @@ export default function Record() {
             const userID = firebase.auth().currentUser.uid;
 
             // generate a unique filename
-            const fileName = `recording_${fileNumberRef.current}.mp3`;
+            const fileName = `recording_${fileNumberRef.current}.wav`;
             const storageRef = firebase.storage().ref().child(`audio/${userID}/${fileName}`);
 
             // Increment a file number for each saved file
             fileNumberRef.current++;
-
-            // Convert the audio file to mp3
-            const fileInfo = await FileSystem.getInfoAsync(uri);
-            const audioFile = {
-                uri: uri,
-                type: fileInfo.mimeType,
-                name: fileName,
-            };
-            const mp3File = await Audio.Sound.createAsync(audioFile, {
-                encoding: Audio.Sound.ENCODING_MP3,
-                bitrate: 256000,
-                channels: 2,
-                sampleRate: 44100,
-            });
-            const mp3Uri = mp3File.uri;
-
-            let response, blob, snapshot, audioUrl;
-            try {
-                response = await fetch(mp3Uri);
-                blob = await response.blob();
-                snapshot = await storageRef.put(blob);
-                audioUrl = await storageRef.getDownloadURL();
-            } catch (err) {
-                console.error('Failed to upload recording', err);
-                throw err;
-            }
-
+            const response = await fetch(uri);
+            const blob = await response.blob();
+            const snapshot = await storageRef.put(blob);
+            const audioUrl = await storageRef.getDownloadURL();
             setSound({ uri });
             setRecording(null);
+            console.log('Recording succesfully uploaded');
+
         } catch (err) {
             console.error('Failed to stop recording', err);
         }
