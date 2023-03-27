@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    StyleSheet, FlatList, Text, TouchableOpacity, View, Button, StatusBar,
+    StyleSheet, FlatList, Text, TouchableOpacity, View, Button, StatusBar, ScrollView, RefreshControl
 } from "react-native";
 import { Table, Row } from 'react-native-table-component';
 import firebase from "firebase";
@@ -14,6 +14,15 @@ import { useNavigation } from '@react-navigation/native';
 export default function Centre() {
     const navigation = useNavigation();
     const [audioList, setAudioList] = useState([]);
+    const [refreshing, setRefreshing] = React.useState(false);
+
+    const onRefresh = React.useCallback(() => {
+        setRefreshing(true);
+        setTimeout(() => {
+            setRefreshing(false);
+        }, 2000);
+    }, []);
+
 
     const handleSignOut = async () => {
         await auth.signOut();
@@ -35,18 +44,26 @@ export default function Centre() {
     };
 
     useEffect(() => {
-        // Get audio files from Firebase Storage
         const userID = firebase.auth().currentUser.uid;
         console.log("Current User: ", userID);
-        firebase.storage().ref(`audio/${userID}/`).listAll().then((result) => {
-            result.items.forEach((audioRef) => {
-                // Get download URL for each audio file
-                audioRef.getDownloadURL().then((url) => {
-                    // Add audio file to the list
-                    setAudioList((prevState) => [...prevState, { name: audioRef.name, url }]);
+
+        firebase.storage()
+            .ref(`audio/${userID}/`)
+            .listAll()
+            .then((result) => {
+                result.items.forEach((audioRef) => {
+                    // Get download URL for each audio file
+                    audioRef.getDownloadURL().then((url) => {
+                        // Check if the audio file has already been added
+                        const isDuplicate = audioList.some((audio) => audio.name === audioRef.name);
+
+                        // If the audio file has not been added, add it to the list
+                        if (!isDuplicate) {
+                            setAudioList((prevState) => [...prevState, { name: audioRef.name, url }]);
+                        }
+                    });
                 });
             });
-        });
     }, []);
 
     const playAudio = async (url) => {
@@ -82,22 +99,33 @@ export default function Centre() {
     };
 
     return (
-        <View style={styles.container}>
-            <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
-            <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
-                <Text style={styles.buttonText}>Sign out</Text>
-            </TouchableOpacity>
-        </View>
+        <ScrollView
+            contentContainerStyle={styles.scrollView}
+            refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }>
+            <View style={styles.container}>
+                <View style={styles.listContainer}>
+                    <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
+                </View>
+                <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
+                    <Text style={styles.buttonText}>Sign out</Text>
+                </TouchableOpacity>
+            </View>
+        </ScrollView>
     );
 };
-
-
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    listContainer: {
+        flex: 1,
+        width: '100%',
+        marginTop: 60,
     },
     itemContainer: {
         width: '85%',
@@ -142,5 +170,10 @@ const styles = StyleSheet.create({
         color: "white",
         fontWeight: "700",
         fontSize: 16,
+    },
+    scrollView: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
 });
