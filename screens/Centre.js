@@ -9,6 +9,7 @@ import 'firebase/storage'
 import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
+import { Platform } from 'react-native';
 
 
 export default function Centre() {
@@ -57,7 +58,6 @@ export default function Centre() {
         }
     };
 
-
     useEffect(() => {
         const userID = firebase.auth().currentUser.uid;
         console.log("Current User: ", userID);
@@ -81,16 +81,15 @@ export default function Centre() {
             });
     }, []);
 
-
     const renderItem = ({ item }) => {
-        return (
-            <View>
+        if (Platform.OS === 'ios') {
+            return (
                 <View style={styles.itemContainer}>
-                    <View style={styles.itemInfo}>
+                    <View style={{ flex: 1 }}>
                         <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
                         <Text style={styles.itemName}>{item.name}</Text>
                     </View>
-                    <View style={styles.itemButtons}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
                             <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
                         </TouchableOpacity>
@@ -102,39 +101,103 @@ export default function Centre() {
                         </TouchableOpacity>
                     </View>
                 </View>
-                <View style={styles.separator} />
-            </View>
-        );
+            );
+        } else if (Platform.OS === 'web') {
+            return (
+                <View style={styles.websiteItemContainer}>
+                    <View style={{ flex: 1 }}>
+                        <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
+                        <Text style={styles.itemName}>{item.name}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
+                            <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10 }]}>
+                            <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
+                            <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            )
+        }
     };
 
-    return (
-        <View style={styles.container}>
-            <ScrollView
-                contentContainerStyle={styles.scrollView}
-                refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }>
-                <View style={styles.listContainer}>
+    if (Platform.OS === 'ios') {
+        return (
+            <View style={styles.container}>
+                <ScrollView
+                    contentContainerStyle={styles.scrollView}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }>
+                    <View style={styles.listContainer}>
+                        <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
+                    </View>
+                </ScrollView>
+                <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
+                    <Text style={styles.buttonText}>Sign out</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    } else if (Platform.OS === 'web') {
+        return (
+            <View style={styles.websiteContainer}>
+                <View style={styles.websiteListContainer}>
                     <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
                 </View>
-            </ScrollView>
-            <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
-                <Text style={styles.buttonText}>Sign out</Text>
-            </TouchableOpacity>
-        </View>
-    );
+                <TouchableOpacity onPress={handleSignOut} style={[styles.websiteSignOutButton]}>
+                    <Text style={styles.buttonText}>Sign out</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 };
 
 const styles = StyleSheet.create({
+    websiteContainer: {
+        flex: 1,
+        alignContent: 'center'
+
+    },
+    websiteListContainer: {
+        flex: 1,
+        alignItems: 'stretch',
+        alignContent: 'center',
+        width: '100%',
+        marginTop: 60,
+
+    },
+    websiteItemContainer: {
+        width: '100%',
+        paddingHorizontal: 5,
+        alignContent: 'center',
+        flexDirection: 'row',
+        alignItems: 'stretch',
+        paddingVertical: 10,
+    },
+    websiteSignOutButton: {
+        backgroundColor: "#0782F9",
+        width: "20%",
+        padding: 15,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: 'center',
+        bottom: 60,
+    },
     container: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
+        width: '100%',
     },
     listContainer: {
         flex: 1,
         width: '100%',
         marginTop: 60,
+        paddingHorizontal: 10,
     },
     itemContainer: {
         width: '85%',
