@@ -43,6 +43,21 @@ export default function Centre() {
         });
     };
 
+    const handleDownload = () => {
+
+    }
+
+    const playAudio = async (url) => {
+        try {
+            const soundObject = new Audio.Sound();
+            await soundObject.loadAsync({ uri: url });
+            await soundObject.playAsync();
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
     useEffect(() => {
         const userID = firebase.auth().currentUser.uid;
         console.log("Current User: ", userID);
@@ -66,30 +81,24 @@ export default function Centre() {
             });
     }, []);
 
-    const playAudio = async (url) => {
-        try {
-            const soundObject = new Audio.Sound();
-            await soundObject.loadAsync({ uri: url });
-            await soundObject.playAsync();
-        } catch (error) {
-            console.error(error);
-        }
-    };
 
     const renderItem = ({ item }) => {
         return (
             <View>
                 <View style={styles.itemContainer}>
                     <View style={styles.itemInfo}>
-                        <MaterialCommunityIcons name="file-music" size={24} color="black" />
+                        <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
                         <Text style={styles.itemName}>{item.name}</Text>
                     </View>
                     <View style={styles.itemButtons}>
-                        <TouchableOpacity onPress={() => handleDelete(item.name)} style={styles.itemButton}>
-                            <MaterialCommunityIcons name="delete" size={24} color="black" />
+                        <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
+                            <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => playAudio(item.url)} style={styles.itemButton}>
-                            <MaterialCommunityIcons name="play-circle" size={24} color="black" />
+                        <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10 }]}>
+                            <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
+                            <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -99,20 +108,20 @@ export default function Centre() {
     };
 
     return (
-        <ScrollView
-            contentContainerStyle={styles.scrollView}
-            refreshControl={
-                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-            }>
-            <View style={styles.container}>
+        <View style={styles.container}>
+            <ScrollView
+                contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
                 <View style={styles.listContainer}>
                     <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
                 </View>
-                <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
-                    <Text style={styles.buttonText}>Sign out</Text>
-                </TouchableOpacity>
-            </View>
-        </ScrollView>
+            </ScrollView>
+            <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
+                <Text style={styles.buttonText}>Sign out</Text>
+            </TouchableOpacity>
+        </View>
     );
 };
 
@@ -148,7 +157,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     itemButton: {
-        marginLeft: 20,
+        marginLeft: 15,
+        marginRight: 10,
     },
     separator: {
         borderBottomWidth: 1,
