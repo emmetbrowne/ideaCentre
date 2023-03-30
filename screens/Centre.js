@@ -81,46 +81,58 @@ export default function Centre() {
             });
     }, []);
 
-    const renderItem = ({ item }) => {
+    const renderItem = ({ item, index }) => {
         if (Platform.OS === 'ios') {
             return (
-                <View style={styles.itemContainer}>
-                    <View style={{ flex: 1 }}>
-                        <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
-                        <Text style={styles.itemName}>{item.name}</Text>
+                <>
+                    <View style={styles.itemContainer}>
+                        <View style={{ flex: 1 }}>
+                            <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
+                            <Text style={styles.itemName}>{item.name}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
+                                <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10 }]}>
+                                <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
+                                <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
-                            <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10 }]}>
-                            <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
-                            <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                    <View style={styles.separator} key={`separator-${index}`} />
+                </>
             );
         } else if (Platform.OS === 'web') {
             return (
-                <View style={styles.websiteItemContainer}>
-                    <View style={{ flex: 1 }}>
-                        <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
-                        <Text style={styles.itemName}>{item.name}</Text>
+                <>
+
+                    <View style={styles.websiteItemContainer}>
+
+                        <View style={{ flex: 1 }}>
+                            <TouchableOpacity style={[styles.itemButton, { marginRight: 10, marginTop: 0 }]}>
+                                <MaterialCommunityIcons name="folder-music-outline" size={24} color="grey" />
+                                <Text style={styles.itemName}>{item.name}</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                            <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10, marginTop: 5 }]}>
+                                <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10, marginTop: 5 }]}>
+                                <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={() => handleDownload(item.name)} style={[styles.itemButton, { marginRight: 10, marginTop: 5 }]}>
+                                <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
+                            </TouchableOpacity>
+                        </View>
                     </View>
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                        <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
-                            <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10 }]}>
-                            <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
-                            <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+
+                    <View style={styles.separator} key={`separator-${index}`} />
+
+                </>
             )
         }
     };
@@ -128,6 +140,7 @@ export default function Centre() {
     if (Platform.OS === 'ios') {
         return (
             <View style={styles.container}>
+
                 <ScrollView
                     contentContainerStyle={styles.scrollView}
                     refreshControl={
@@ -145,6 +158,10 @@ export default function Centre() {
     } else if (Platform.OS === 'web') {
         return (
             <View style={styles.websiteContainer}>
+                <View style={styles.topBar}>
+
+                    <Text style={styles.topBarText}>ideaCentre</Text>
+                </View>
                 <View style={styles.websiteListContainer}>
                     <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
                 </View>
@@ -158,9 +175,9 @@ export default function Centre() {
 
 const styles = StyleSheet.create({
     websiteContainer: {
+        marginTop: 0,
         flex: 1,
         alignContent: 'center'
-
     },
     websiteListContainer: {
         flex: 1,
@@ -183,9 +200,21 @@ const styles = StyleSheet.create({
         width: "20%",
         padding: 15,
         borderRadius: 10,
-        alignItems: "center",
-        justifyContent: 'center',
         bottom: 60,
+        alignItems: "center",
+        marginLeft: 800,
+    },
+    topBar: {
+        backgroundColor: '#0782F9',
+        height: 75,
+        alignItems: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+    },
+    topBarText: {
+        color: "white",
+        fontWeight: "700",
+        fontSize: 45,
     },
     container: {
         flex: 1,
@@ -212,8 +241,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     itemName: {
-        marginLeft: 10,
+        marginLeft: 60,
         fontSize: 16,
+        alignItems: 'center',
     },
     itemButtons: {
         flexDirection: 'row',

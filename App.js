@@ -8,6 +8,8 @@ import Record from "./screens/Record";
 import Centre from "./screens/Centre";
 import firebase from "firebase";
 import { Ionicons } from 'react-native-vector-icons';
+import { Platform } from 'react-native';
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -39,31 +41,51 @@ export default function App() {
     );
   }
 
-  return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+  if (Platform.OS === 'ios' || 'android') {
+    return (
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+              if (route.name === 'Record') {
+                iconName = focused
+                  ? 'mic-outline'
+                  : 'mic';
+              } else if (route.name === 'Centre') {
+                iconName = focused ? 'cloud' : 'cloud-outline';
+              }
+              // You can return any component that you like here!
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+          })}>
+          <Tab.Screen name="Record" component={Record} />
+          <Tab.Screen name="Centre" component={Centre} />
+        </Tab.Navigator>
+      </NavigationContainer>
+    );
 
-            if (route.name === 'Record') {
-              iconName = focused
-                ? 'mic-outline'
-                : 'mic';
-            } else if (route.name === 'Centre') {
-              iconName = focused ? 'cloud' : 'cloud-outline';
-            }
-
-            // You can return any component that you like here!
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-        })}>
-        <Tab.Screen name="Record" component={Record} />
-        <Tab.Screen name="Centre" component={Centre} />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
+  } else {
+    return (
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={({ route }) => ({
+            headerShown: false,
+            tabBarIcon: ({ focused, color, size }) => {
+              let iconName;
+              if (route.name === 'Centre') {
+                iconName = focused ? 'cloud' : 'cloud-outline';
+              }
+              // You can return any component that you like here!
+              return <Ionicons name={iconName} size={size} color={color} />;
+            },
+          })}>
+          <Tab.Screen name="Centre" component={Centre} />
+        </Tab.Navigator>
+      </NavigationContainer>
+    );
+  }
 }
 
 const styles = StyleSheet.create({
