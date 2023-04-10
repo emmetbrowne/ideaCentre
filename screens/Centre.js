@@ -10,12 +10,14 @@ import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 
 
 export default function Centre() {
     const navigation = useNavigation();
     const [audioList, setAudioList] = useState([]);
     const [refreshing, setRefreshing] = React.useState(false);
+    const storage = firebase.storage();
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
@@ -44,15 +46,50 @@ export default function Centre() {
         });
     };
 
-    const handleDownload = () => {
+    // const handleDownload = async (firebasePath, localFilename) => {
+    //     const storageRef = firebase.storage().ref(`audio/${firebase.auth().currentUser.uid}/${fileName}`);
 
-    }
+    //     try {
+    //         const downloadUrl = await storageRef.getDownloadURL();
+    //         const localUri = FileSystem.documentDirectory + localFilename;
+    //         const downloadResult = await FileSystem.downloadAsync(downloadUrl, localUri);
+    //         console.log(`Download complete: ${downloadResult.uri}`);
+    //     } catch (error) {
+    //         console.error(`Error downloading audio file: ${error}`);
+    //     }
+    // };
+
+    const handleDownload = async (itemName) => {
+        try {
+            // Get reference to the audio file in Firebase storage
+            const audioRef = storage.ref().child(`audio/${firebase.auth().currentUser.uid}/${itemName}`);
+
+            // Download the audio file to the local device
+            const downloadUrl = await audioRef.getDownloadURL();
+            const response = await fetch(downloadUrl);
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${itemName}.mp3`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Show a success message to the user
+            window.alert(`${itemName} has been downloaded to your device.`);
+        } catch (error) {
+            console.error(error);
+            window.alert('Unable to download audio file.');
+        }
+    };
 
     const playAudio = async (url) => {
         try {
             const soundObject = new Audio.Sound();
             await soundObject.loadAsync({ uri: url });
             await soundObject.playAsync();
+            console.log("Audio playing succesfully");
         } catch (error) {
             console.error(error);
         }
@@ -93,9 +130,6 @@ export default function Centre() {
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                             <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
                                 <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={() => playAudio(item.url)} style={[styles.itemButton, { marginRight: 10 }]}>
-                                <MaterialCommunityIcons name="play-circle-outline" size={24} color="grey" />
                             </TouchableOpacity>
                             <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
                                 <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
@@ -248,10 +282,11 @@ const styles = StyleSheet.create({
     itemButtons: {
         flexDirection: 'row',
         alignItems: 'center',
+
     },
     itemButton: {
         marginLeft: 15,
-        marginRight: 10,
+
     },
     separator: {
         borderBottomWidth: 1,
