@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-    StyleSheet, FlatList, Text, TouchableOpacity, View, Button, StatusBar, ScrollView, RefreshControl
+    StyleSheet, FlatList, Text, TouchableOpacity, View, Button, StatusBar, ScrollView, RefreshControl, Alert
 } from "react-native";
 import { Table, Row } from 'react-native-table-component';
 import firebase from "firebase";
@@ -10,14 +10,13 @@ import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Platform } from 'react-native';
-import * as FileSystem from 'expo-file-system';
-
 
 export default function Centre() {
     const navigation = useNavigation();
     const [audioList, setAudioList] = useState([]);
     const [refreshing, setRefreshing] = React.useState(false);
     const storage = firebase.storage();
+    const [showBox, setShowBox] = useState(true);
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
@@ -35,32 +34,50 @@ export default function Centre() {
         });
     };
 
-    const handleDelete = () => {
-        const userID = firebase.auth().currentUser.uid;
-        const audioRef = firebase.storage().ref('audio/${userID}/${fileName}');
-
-        audioRef.delete().then(() => {
-            setAudioList((prevState) => prevState.filter((audio) => audio.name !== fileName));
-        }).catch((error) => {
-            console.error(error);
-        });
+    const showConfirmDialog = () => {
+        return Alert.alert(
+            "Delete Recording",
+            "Are you sure you want to permanently delete this audio?",
+            [
+                // The "Yes" button
+                {
+                    text: "Yes",
+                    onPress: () => {
+                        handleDelete();
+                        console.log("This audio has been succesfully deleted")
+                        setShowBox(false);
+                    },
+                },
+                // The "No" button
+                // Does nothing but dismiss the dialog when tapped
+                {
+                    text: "No",
+                },
+            ]
+        );
     };
 
-    // const handleDownload = async (firebasePath, localFilename) => {
-    //     const storageRef = firebase.storage().ref(`audio/${firebase.auth().currentUser.uid}/${fileName}`);
+    const handleDelete = async (itemName) => {
+        const audioRef = firebase.storage().ref(`audio/${firebase.auth().currentUser.uid}/${itemName}`);
 
-    //     try {
-    //         const downloadUrl = await storageRef.getDownloadURL();
-    //         const localUri = FileSystem.documentDirectory + localFilename;
-    //         const downloadResult = await FileSystem.downloadAsync(downloadUrl, localUri);
-    //         console.log(`Download complete: ${downloadResult.uri}`);
-    //     } catch (error) {
-    //         console.error(`Error downloading audio file: ${error}`);
-    //     }
-    // };
+        // Delete file from Firebase Storage
+        await audioRef.delete();
+        console.log("File deleted successfully from Firebase Storage.");
+
+        // Delete corresponding data from the database
+        const dbRef = firebase.database().ref(`audio/${firebase.auth().currentUser.uid}/${itemName}`);
+        await dbRef.remove();
+        console.log("Data deleted successfully from the database.");
+
+        // Update audioList state to remove the deleted item
+        setAudioList(prevState => prevState.filter(audio => audio.name !== itemName));
+
+    };
 
     const handleDownload = async (itemName) => {
         try {
+            const sanitizedItemName = itemName.replace(/[.#$[\]]/g, "-");
+
             // Get reference to the audio file in Firebase storage
             const audioRef = storage.ref().child(`audio/${firebase.auth().currentUser.uid}/${itemName}`);
 
@@ -128,12 +145,13 @@ export default function Centre() {
                             <Text style={styles.itemName}>{item.name}</Text>
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
+                            <TouchableOpacity onPress={() => showConfirmDialog()}>
                                 <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={() => handleDownload(item.name)} style={styles.itemButton}>
-                                <MaterialCommunityIcons name="download-circle-outline" size={24} color="grey" />
-                            </TouchableOpacity>
+                            {/* <TouchableOpacity onPress={() => handleDelete(item.name)} style={[styles.itemButton, { marginRight: 10 }]}>
+                                <MaterialCommunityIcons name="delete-outline" size={24} color="grey" />
+                            </TouchableOpacity> */}
+
                         </View>
                     </View>
                     <View style={styles.separator} key={`separator-${index}`} />
@@ -174,6 +192,9 @@ export default function Centre() {
     if (Platform.OS === 'ios') {
         return (
             <View style={styles.container}>
+                <View style={styles.header}>
+                    <Text style={styles.title}>ideaCentre</Text>
+                </View>
 
                 <ScrollView
                     contentContainerStyle={styles.scrollView}
@@ -184,9 +205,6 @@ export default function Centre() {
                         <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
                     </View>
                 </ScrollView>
-                <TouchableOpacity onPress={handleSignOut} style={[styles.signOutButton]}>
-                    <Text style={styles.buttonText}>Sign out</Text>
-                </TouchableOpacity>
             </View>
         );
     } else if (Platform.OS === 'web') {
@@ -208,6 +226,40 @@ export default function Centre() {
 };
 
 const styles = StyleSheet.create({
+    container: {
+
+        flex: 1,
+        backgroundColor: '#F7F7F7',
+    },
+    listContainer: {
+        paddingHorizontal: 16,
+        paddingTop: 16,
+    },
+    itemContainer: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 10,
+        padding: 16,
+        marginBottom: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    itemName: {
+        fontSize: 18,
+        fontWeight: '500',
+        marginLeft: 16,
+    },
+    itemButtonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    itemButton: {
+        marginLeft: 16,
+    },
+    separator: {
+        height: 1,
+        backgroundColor: '#E5E5E5',
+    },
     websiteContainer: {
         marginTop: 0,
         flex: 1,
@@ -250,68 +302,24 @@ const styles = StyleSheet.create({
         fontWeight: "700",
         fontSize: 45,
     },
-    container: {
-        flex: 1,
-        alignItems: 'center',
+    header: {
+        backgroundColor: '#fff',
         justifyContent: 'center',
-        width: '100%',
-    },
-    listContainer: {
-        flex: 1,
-        width: '100%',
-        marginTop: 60,
-        paddingHorizontal: 10,
-    },
-    itemContainer: {
-        width: '85%',
-        paddingHorizontal: 5,
-        flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 10,
+        height: 110,
+        paddingTop: 30,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
-    itemInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    itemName: {
-        marginLeft: 60,
-        fontSize: 16,
-        alignItems: 'center',
-    },
-    itemButtons: {
-        flexDirection: 'row',
-        alignItems: 'center',
-
-    },
-    itemButton: {
-        marginLeft: 15,
-
-    },
-    separator: {
-        borderBottomWidth: 1,
-        borderBottomColor: 'grey',
-        width: '100%',
-        marginTop: 10,
-    },
-    signOutButton: {
-        backgroundColor: "#0782F9",
-        width: "60%",
-        padding: 15,
-        borderRadius: 10,
-        alignItems: "center",
-        marginTop: 40,
-        position: 'absolute',
-        bottom: 100,
-    },
-    buttonText: {
-        color: "white",
-        fontWeight: "700",
-        fontSize: 16,
-    },
-    scrollView: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+    title: {
+        fontSize: 40,
+        fontWeight: 'bold',
     },
 });
+

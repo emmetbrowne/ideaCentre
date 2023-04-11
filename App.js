@@ -1,14 +1,16 @@
 import { React, useState, useEffect } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, Alert, TouchableOpacity } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createStackNavigator } from "@react-navigation/stack";
 import Login from "./screens/Login";
 import Record from "./screens/Record";
 import Centre from "./screens/Centre";
+import SignOut from "./screens/SignOut";
 import firebase from "firebase";
 import { Ionicons } from 'react-native-vector-icons';
 import { Platform } from 'react-native';
+
 
 
 const Tab = createBottomTabNavigator();
@@ -55,6 +57,8 @@ export default function App() {
                   : 'mic';
               } else if (route.name === 'Centre') {
                 iconName = focused ? 'cloud' : 'cloud-outline';
+              } else if (route.name === 'Sign Out') {
+                iconName = focused ? 'exit' : 'exit-outline';
               }
               // You can return any component that you like here!
               return <Ionicons name={iconName} size={size} color={color} />;
@@ -62,6 +66,7 @@ export default function App() {
           })}>
           <Tab.Screen name="Record" component={Record} />
           <Tab.Screen name="Centre" component={Centre} />
+          <Tab.Screen name="Sign Out" component={SignOut} />
         </Tab.Navigator>
       </NavigationContainer>
     );

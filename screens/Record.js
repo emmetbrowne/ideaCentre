@@ -63,6 +63,7 @@ export default function Record() {
                 linearPCMIsFloat: false
             }
         };
+
         // create a new recording instance
         const recording = new Audio.Recording();
         console.log('Created new recording instance');
@@ -102,8 +103,7 @@ export default function Record() {
             // generate a unique filename
             const fileName = `recording_${fileNumberRef.current}.wav`;
             const storageRef = firebase.storage().ref().child(`audio/${userID}/${fileName}`);
-
-            // Increment a file number for each saved file
+            // Increment the file number after setting the file name
             fileNumberRef.current++;
             const response = await fetch(uri);
             const blob = await response.blob();
@@ -111,7 +111,7 @@ export default function Record() {
             const audioUrl = await storageRef.getDownloadURL();
             setSound({ uri });
             setRecording(null);
-            console.log('Recording succesfully uploaded');
+            console.log('Recording successfully uploaded');
 
         } catch (err) {
             console.error('Failed to stop recording', err);
