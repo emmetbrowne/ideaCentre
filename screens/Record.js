@@ -130,9 +130,6 @@ export default function Record() {
                     <Button style={styles.recordButton} title="Stop Recording" onPress={stopRecording} disabled={!recording} />
                 </View>
             </View>
-            <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-                <Text style={styles.buttonText}>Sign out</Text>
-            </TouchableOpacity>
         </View>
     );
 }
@@ -178,17 +175,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 100,
     },
-    buttonText: {
-        color: "white",
-        fontWeight: "700",
-        fontSize: 16,
-    },
     buttonsContainer: {
         justifyContent: 'center',
         alignItems: 'center',
-    },
-    recordButton: {
-        fontWeight: 'bold',
-
     },
 });
