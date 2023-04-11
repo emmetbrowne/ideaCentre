@@ -8,6 +8,7 @@ import 'firebase/storage'
 import { Audio } from "expo-av";
 import * as FileSystem from 'expo-file-system';
 import { useNavigation } from '@react-navigation/native';
+import { Header } from 'react-navigation';
 
 export default function Record() {
     const navigation = useNavigation();
@@ -119,7 +120,9 @@ export default function Record() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Record Audio</Text>
+            <View style={styles.header}>
+                <Text style={styles.title}>ideaCentre</Text>
+            </View>
             <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
                 <Text style={styles.buttonText}>Sign out</Text>
             </TouchableOpacity>
@@ -132,13 +135,26 @@ export default function Record() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
+    },
+    header: {
+        backgroundColor: '#fff',
         justifyContent: 'center',
+        alignItems: 'center',
+        height: 80,
+        paddingTop: 30,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     title: {
-        fontSize: 20,
+        fontSize: 40,
         fontWeight: 'bold',
-        marginBottom: 20,
+
     },
     status: {
         marginTop: 20,
