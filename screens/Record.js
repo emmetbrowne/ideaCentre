@@ -118,16 +118,21 @@ export default function Record() {
         }
     };
 
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.title}>ideaCentre</Text>
             </View>
+            <View style={styles.centeredView}>
+                <View style={styles.buttonsContainer}>
+                    <Button style={styles.recordButton} title="Start Recording" onPress={startRecording} disabled={recordingStatus === 'recording'} />
+                    <Button style={styles.recordButton} title="Stop Recording" onPress={stopRecording} disabled={!recording} />
+                </View>
+            </View>
             <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
                 <Text style={styles.buttonText}>Sign out</Text>
             </TouchableOpacity>
-            <Button title="Start Recording" onPress={startRecording} disabled={recordingStatus === 'recording'} />
-            <Button title="Stop Recording" onPress={stopRecording} disabled={!recording} />
         </View>
     );
 }
@@ -136,11 +141,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    centeredView: {
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        marginTop: 250,
+    },
     header: {
         backgroundColor: '#fff',
         justifyContent: 'center',
         alignItems: 'center',
-        height: 80,
+        height: 110,
         paddingTop: 30,
         shadowColor: '#000',
         shadowOffset: {
@@ -154,7 +164,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 40,
         fontWeight: 'bold',
-
     },
     status: {
         marginTop: 20,
@@ -169,19 +178,17 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 100,
     },
-    centreButton: {
-        backgroundColor: "#0782F9",
-        width: "60%",
-        padding: 15,
-        borderRadius: 10,
-        alignItems: "center",
-        marginTop: 40,
-        position: 'absolute',
-        bottom: 25,
-    },
     buttonText: {
         color: "white",
         fontWeight: "700",
         fontSize: 16,
+    },
+    buttonsContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    recordButton: {
+        fontWeight: 'bold',
+
     },
 });
