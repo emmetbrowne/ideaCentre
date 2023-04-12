@@ -14,7 +14,6 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -29,9 +28,6 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    },
-    "permissions": ["READ_EXTERNAL_STORAGE"]
-    
+    }
   }
-  
 }
