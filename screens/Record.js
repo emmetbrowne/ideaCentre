@@ -8,7 +8,7 @@ import 'firebase/storage'
 import { Audio } from "expo-av";
 import * as FileSystem from 'expo-file-system';
 import { useNavigation } from '@react-navigation/native';
-import { Header } from 'react-navigation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Record() {
     const navigation = useNavigation();

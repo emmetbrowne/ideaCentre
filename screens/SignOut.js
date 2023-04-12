@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, StyleSheet, Text, TextInput, TouchableOpacity, Vi
 import firebase from "firebase";
 import auth from "../firebase/auth";
 import 'firebase/storage'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SigOut() {
 

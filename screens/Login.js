@@ -10,7 +10,7 @@ import {
   View,
 } from "react-native";
 import auth from "../firebase/auth";
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 // add loading if loading (loading screen)

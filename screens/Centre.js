@@ -10,6 +10,7 @@ import { Audio } from 'expo-av';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Centre() {
     const navigation = useNavigation();
@@ -217,9 +218,6 @@ export default function Centre() {
                 <View style={styles.websiteListContainer}>
                     <FlatList data={audioList} renderItem={renderItem} keyExtractor={(item) => item.name} />
                 </View>
-                <TouchableOpacity onPress={handleSignOut} style={[styles.websiteSignOutButton]}>
-                    <Text style={styles.buttonText}>Sign out</Text>
-                </TouchableOpacity>
             </View>
         );
     }

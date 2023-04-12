@@ -10,7 +10,7 @@ import SignOut from "./screens/SignOut";
 import firebase from "firebase";
 import { Ionicons } from 'react-native-vector-icons';
 import { Platform } from 'react-native';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 const Tab = createBottomTabNavigator();
